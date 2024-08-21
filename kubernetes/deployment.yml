@@ -28,7 +28,7 @@ spec:
         app: picklistupdater
     spec:
       containers:
-        - image: harbor.k3s.quokka.ninja/library/picklistupdater:0.0.1
+        - image: harbor.k3s.quokka.ninja/library/picklistupdater:0.0.2
           name: picklistupdater
           args: ['/bin/bash', '-c', 'source /vault/secrets/picklistupdater && uvicorn picklistupdater:app --host 0.0.0.0 --port 8000 --root-path /picklistupdater']
           ports:
