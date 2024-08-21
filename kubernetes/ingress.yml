@@ -3,9 +3,6 @@ kind: Ingress
 metadata:
   name: picklistupdater
   annotations:
-    traefik.ingress.kubernetes.io/redirect-entry-point: https
-    traefik.ingress.kubernetes.io/redirect-permanent: "true"
-    traefik.ingress.kubernetes.io/rewrite-target: /
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
     traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd,default-picklistupdater-stripprefix@kubernetescrd
 spec:
@@ -20,4 +17,4 @@ spec:
           service:
             name: picklistupdater
             port:
-              number: 80
+              number: 8000
