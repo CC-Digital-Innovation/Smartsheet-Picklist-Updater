@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: picklistupdater
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: picklistupdater
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: 'true'
+        vault.hashicorp.com/role: 'picklistupdater'
+        vault.hashicorp.com/agent-inject-secret-picklistupdater: 'secret/picklistupdater>'
+        vault.hashicorp.com/agent-inject-template-picklistupdater: |
+          {{- with secret "secret/picklistupdater>" -}}
+            export SHARED_SECRET="{{ .Data.data.sharedsecret }}"
+            export SMARTSHEET_API_TOKEN="{{ .Data.data.smartsheettoken }}"
+            export SMARTSHEET_TIME_TRACKING_FOLDER_ID="{{ .Data.data.folderids }}"
+            export MASTER_CUST_LIST_SHEET_ID="{{ .Data.data.masterid }}"
+            export MASTER_SHEET_NAME="{{ .Data.data.mastername }}"
+          {{- end }}
+        vault.hashicorp.com/agent-pre-populate-only: "true"
+        vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
+      labels:
+        app: picklistupdater
+    spec:
+      containers:
+        - image: harbor.k3s.quokka.ninja/library/picklistupdater
+          name: picklistupdater
+          args: ['/bin/bash', '-c', 'source /vault/secrets/picklistupdater && uvicorn picklistupdater:app --host 0.0.0.0 --port 8000 --root-path /api']
+          ports:
+            - containerPort: 8000
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      serviceAccountName: picklistupdater

@@ -1,0 +1,5 @@
+requests==2.31.0
+uvicorn==0.22.0
+fastapi==0.101.1
+smartsheet-python-sdk==3.0.4
+python-dotenv==1.01
