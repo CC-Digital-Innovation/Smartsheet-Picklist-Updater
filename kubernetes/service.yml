@@ -4,6 +4,6 @@ metadata:
   name: picklistupdater
 spec:
   selector:
-    app: PicklistUpdater
+    app: picklistupdater
   ports:
     - port: 8000
