@@ -15,7 +15,7 @@ spec:
         vault.hashicorp.com/role: 'picklistupdater'
         vault.hashicorp.com/agent-inject-secret-picklistupdater: 'secret/picklistupdater'
         vault.hashicorp.com/agent-inject-template-picklistupdater: |
-          {{- with secret "secret/picklistupdater>" -}}
+          {{- with secret "secret/picklistupdater" -}}
             export SHARED_SECRET="{{ .Data.data.sharedsecret }}"
             export SMARTSHEET_API_TOKEN="{{ .Data.data.smartsheettoken }}"
             export SMARTSHEET_TIME_TRACKING_FOLDER_ID="{{ .Data.data.folderids }}"
