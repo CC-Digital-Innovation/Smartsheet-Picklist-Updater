@@ -19,7 +19,7 @@ SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list = SMARTSHEET_TIME_TRACKING_FOLDER_IDs.s
 MASTER_CUST_LIST_SHEET_ID = os.getenv("MASTER_CUST_LIST_SHEET_ID")
 MASTER_CUST_LIST_SHEET_NAME = os.getenv("MASTER_SHEET_NAME")
 
-encrypt = hmac.new(SMARTSHEET_WEBHOOK_SHAREDSECRET.encode(), digestmod='sha256')
+
 
 #init app - rename with desired app name
 app = FastAPI()
@@ -28,8 +28,11 @@ app = FastAPI()
 
 #auth key
 def authorize(body, checkvalue):
-    encrypt.update(body.encode())
-    if not encrypt.hexdigest()==checkvalue:
+    encrypt = hmac.new(SMARTSHEET_WEBHOOK_SHAREDSECRET.encode(), body.encode(), digestmod='sha256')
+    decrypt = encrypt.hexdigest()
+    print(f"Recieved in Header: {checkvalue}")
+    print(f"hashed:             {decrypt}")
+    if not decrypt==checkvalue:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Invalid token')
@@ -97,7 +100,6 @@ def get_customer_list(sheetid):
 #sample post
 @app.post('/picklistupdater')
 def sample_post(body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
-    print(Smartsheet_Hmac_SHA256)
     print(body)
     if "challenge" in body.keys():
         return {"smartsheetHookResponse" : body['challenge']}
