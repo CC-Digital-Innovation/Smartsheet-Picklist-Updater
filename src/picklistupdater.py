@@ -107,6 +107,7 @@ def sample_post(body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header
         Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256))
         custs = get_customer_list(MASTER_CUST_LIST_SHEET_ID)
         picklist_distribution(custs)
+        return {"Success" : "You successfully updated the timesheets"}
     
 
 
