@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException, status, Header, Body
+from fastapi import Depends, FastAPI, HTTPException, status, Header, Body, BackgroundTasks
 from pathlib import PurePath
 import dotenv
 import os
@@ -82,7 +82,8 @@ def picklist_distribution(customer_options: list):
             print(f'{time_tracking_sheet.name}\'s time tracking sheet was successfully updated!')
         else:
             print(f'Error updating {time_tracking_sheet.name}\'s time tracking sheet | '
-                  f'Result Code: {update_column_response.result_code}')\
+                  f'Result Code: {update_column_response.result_code}')
+    print("------------Done updating Sheets------------")
 
 def get_customer_list(sheetid):
     smartsheet_client = smartsheet.Smartsheet(access_token=SMARTSHEET_API_TOKEN)
@@ -97,17 +98,21 @@ def get_customer_list(sheetid):
     custlist.pop(0)
     return custlist
 
+def funcCaller():
+    custs = get_customer_list(MASTER_CUST_LIST_SHEET_ID)
+    picklist_distribution(custs)
+
+
 #sample post
 @app.post('/picklistupdater')
-def sample_post(body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
+async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
     print(body)
     if "challenge" in body.keys():
         return {"smartsheetHookResponse" : body['challenge']}
     else:
         Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256))
-        custs = get_customer_list(MASTER_CUST_LIST_SHEET_ID)
-        picklist_distribution(custs)
-        return {"Success" : "You successfully updated the timesheets"}
+        tasks.add_task(funcCaller)
+        return {"Callback Message" : "Callback recieved, proccessing update"}
     
 
 
