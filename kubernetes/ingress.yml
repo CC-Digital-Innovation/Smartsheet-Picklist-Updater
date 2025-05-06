@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: k3s.quokka.ninja
+  - host: k3s.ccxs.support
     http:
       paths:
       - path: /picklistupdater
