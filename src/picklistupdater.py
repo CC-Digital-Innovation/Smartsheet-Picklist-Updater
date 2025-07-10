@@ -90,7 +90,7 @@ def get_customer_list(sheetid):
     custlist=[]
     with tempfile.TemporaryDirectory() as csvdir:
         smartsheet_client.Sheets.get_sheet_as_csv(sheetid, csvdir)
-        with open(os.path.join(csvdir, f'{MASTER_CUST_LIST_SHEET_NAME}.csv'), 'r') as file:
+        with open(os.path.join(csvdir, 'download.csv'), 'r') as file:
             csvread = csv.reader(file, delimiter='\n')
             for row in csvread:
                 cols = row[0].split(',')
