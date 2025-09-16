@@ -21,6 +21,8 @@ spec:
             export SMARTSHEET_TIME_TRACKING_FOLDER_ID="{{ .Data.data.folderids }}"
             export MASTER_CUST_LIST_SHEET_ID="{{ .Data.data.masterid }}"
             export MASTER_SHEET_NAME="{{ .Data.data.mastername }}"
+            export MASTER_CONTRACT_LIST_SHEET_ID="{{ .Data.data.contractid }}"
+            export CONTRACT_TRACKING_FOLDER_ID="{{ .Data.data.contractfolderid }}"
           {{- end }}
         vault.hashicorp.com/agent-pre-populate-only: "true"
         vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt

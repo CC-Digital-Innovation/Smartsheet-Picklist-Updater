@@ -18,6 +18,9 @@ SMARTSHEET_TIME_TRACKING_FOLDER_IDs = os.getenv('SMARTSHEET_TIME_TRACKING_FOLDER
 SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list = SMARTSHEET_TIME_TRACKING_FOLDER_IDs.split(',')
 MASTER_CUST_LIST_SHEET_ID = os.getenv("MASTER_CUST_LIST_SHEET_ID")
 MASTER_CUST_LIST_SHEET_NAME = os.getenv("MASTER_SHEET_NAME")
+MASTER_CONTRACT_LIST_SHEET_ID = os.getenv("MASTER_CONTRACT_LIST_SHEET_ID")
+CONTRACT_FOLDERS_IDS=os.getenv('CONTRACT_TRACKING_FOLDER_ID')
+CONTRACT_TRACKING_FOLDER_IDs_list = CONTRACT_FOLDERS_IDS.split(',')
 
 
 
@@ -38,13 +41,13 @@ def authorize(body, checkvalue):
             detail='Invalid token')
 
 
-def picklist_distribution(customer_options: list):
+def picklist_distribution(customer_options: list, col_num: int, col_title, folders):
     # Initialize the connection to the Smartsheet client.
     smartsheet_client = smartsheet.Smartsheet(access_token=SMARTSHEET_API_TOKEN)
     sheetslist = []
 
     # Get all sheets from the time tracking folder.
-    for folder in SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list:
+    for folder in folders:
         time_tracking_folder = smartsheet_client.Folders.get_folder(folder)
         all_time_tracking_sheets = time_tracking_folder.sheets.to_list()
         for eachlist in all_time_tracking_sheets:
@@ -53,10 +56,10 @@ def picklist_distribution(customer_options: list):
     # Make the new customer options column to update all the sheets with.
     new_customer_options_column = smartsheet.models.Column(
         {
-            'title': 'Customer Name',
+            'title': col_title,
             'type': 'PICKLIST',
             'options': customer_options,
-            'index': 2
+            'index': col_num
         }
     )
 
@@ -68,7 +71,7 @@ def picklist_distribution(customer_options: list):
         )
 
         # Get the ID of the customer name column.
-        customer_name_column_id = list_columns_response.data[2].id_
+        customer_name_column_id = list_columns_response.data[col_num].id_
     
         # Update the customer name column in the sheet.
         update_column_response = smartsheet_client.Sheets.update_column(
@@ -98,12 +101,12 @@ def get_customer_list(sheetid):
     custlist.pop(0)
     return custlist
 
-def funcCaller():
-    custs = get_customer_list(MASTER_CUST_LIST_SHEET_ID)
-    picklist_distribution(custs)
+def funcCaller(sheetid, col_num, col_title, folders):
+    custs = get_customer_list(sheetid)
+    picklist_distribution(custs, col_num, col_title, folders)
 
 
-#sample post
+#Customer Picklist
 @app.post('/picklistupdater')
 async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
     print(body)
@@ -111,7 +114,20 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
         return {"smartsheetHookResponse" : body['challenge']}
     else:
         Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256))
-        tasks.add_task(funcCaller)
+        folders = SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list
+        tasks.add_task(funcCaller(MASTER_CUST_LIST_SHEET_ID, 2, 'Customer Name', folders))
+        return {"Callback Message" : "Callback recieved, proccessing update"}
+    
+#contract picklist
+@app.post('/contractpicklistupdater')
+async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
+    print(body)
+    if "challenge" in body.keys():
+        return {"smartsheetHookResponse" : body['challenge']}
+    else:
+        Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256))
+        folders = CONTRACT_TRACKING_FOLDER_IDs_list
+        tasks.add_task(funcCaller(MASTER_CONTRACT_LIST_SHEET_ID, 3, 'Opportunity Number', folders))
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
 
