@@ -14,6 +14,7 @@ dotenv.load_dotenv(PurePath(__file__).with_name('.env'))
 #assign environment variables to globals
 SMARTSHEET_API_TOKEN = os.getenv('SMARTSHEET_API_TOKEN')
 SMARTSHEET_WEBHOOK_SHAREDSECRET = os.getenv('SHARED_SECRET')
+SMARTSHEET_CONTRACT_WEBHOOK_SHAREDSECRET = os.getenv('CONTRACT_SHARED_SECRET')
 SMARTSHEET_TIME_TRACKING_FOLDER_IDs = os.getenv('SMARTSHEET_TIME_TRACKING_FOLDER_ID')
 SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list = SMARTSHEET_TIME_TRACKING_FOLDER_IDs.split(',')
 MASTER_CUST_LIST_SHEET_ID = os.getenv("MASTER_CUST_LIST_SHEET_ID")
@@ -30,7 +31,7 @@ app = FastAPI()
 #init key for auth
 
 #auth key
-def authorize(body, checkvalue):
+def authorize(body, checkvalue, webhooksecret):
     encrypt = hmac.new(SMARTSHEET_WEBHOOK_SHAREDSECRET.encode(), body.encode(), digestmod='sha256')
     decrypt = encrypt.hexdigest()
     print(f"Recieved in Header: {checkvalue}")
@@ -113,7 +114,7 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
     if "challenge" in body.keys():
         return {"smartsheetHookResponse" : body['challenge']}
     else:
-        Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256))
+        Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256, SMARTSHEET_WEBHOOK_SHAREDSECRET))
         folders = SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list
         tasks.add_task(funcCaller(MASTER_CUST_LIST_SHEET_ID, 2, 'Customer Name', folders))
         return {"Callback Message" : "Callback recieved, proccessing update"}
@@ -125,7 +126,7 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
     if "challenge" in body.keys():
         return {"smartsheetHookResponse" : body['challenge']}
     else:
-        Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256))
+        Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256, SMARTSHEET_CONTRACT_WEBHOOK_SHAREDSECRET))
         folders = CONTRACT_TRACKING_FOLDER_IDs_list
         tasks.add_task(funcCaller(MASTER_CONTRACT_LIST_SHEET_ID, 3, 'Opportunity Number', folders))
         return {"Callback Message" : "Callback recieved, proccessing update"}
