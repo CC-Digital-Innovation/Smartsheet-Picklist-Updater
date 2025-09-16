@@ -32,7 +32,7 @@ app = FastAPI()
 
 #auth key
 def authorize(body, checkvalue, webhooksecret):
-    encrypt = hmac.new(SMARTSHEET_WEBHOOK_SHAREDSECRET.encode(), body.encode(), digestmod='sha256')
+    encrypt = hmac.new(webhooksecret.encode(), body.encode(), digestmod='sha256')
     decrypt = encrypt.hexdigest()
     print(f"Recieved in Header: {checkvalue}")
     print(f"hashed:             {decrypt}")
