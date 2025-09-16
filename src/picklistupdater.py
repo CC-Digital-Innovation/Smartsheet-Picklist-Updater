@@ -108,7 +108,7 @@ def funcCaller(sheetid, col_num, col_title, folders):
 
 
 #Customer Picklist
-@app.post('/picklistupdater')
+@app.post('/picklistupdater', status_code=200)
 async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
     print(body)
     if "challenge" in body.keys():
@@ -120,7 +120,7 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
 #contract picklist
-@app.post('/contractpicklistupdater')
+@app.post('/contractpicklistupdater', status_code=200)
 async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
     print(body)
     if "challenge" in body.keys():
