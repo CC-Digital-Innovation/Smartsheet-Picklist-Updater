@@ -7,6 +7,7 @@ import tempfile
 import csv
 import hmac
 import json
+from loguru import logger
 
 #load secrets from environemnt variables defined in deployement
 dotenv.load_dotenv(PurePath(__file__).with_name('.env'))
@@ -34,8 +35,8 @@ app = FastAPI()
 def authorize(body, checkvalue, webhooksecret):
     encrypt = hmac.new(webhooksecret.encode(), body.encode(), digestmod='sha256')
     decrypt = encrypt.hexdigest()
-    print(f"Recieved in Header: {checkvalue}")
-    print(f"hashed:             {decrypt}")
+    logger.info(f"Recieved in Header: {checkvalue}")
+    logger.info(f"hashed:             {decrypt}")
     if not decrypt==checkvalue:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -83,15 +84,16 @@ def picklist_distribution(customer_options: list, col_num: int, col_title, folde
 
         # Output if the update was successful or not.
         if update_column_response.message == 'SUCCESS':
-            print(f'{time_tracking_sheet.name}\'s time tracking sheet was successfully updated!')
+            logger.info(f'{time_tracking_sheet.name}\'s time tracking sheet was successfully updated!')
         else:
-            print(f'Error updating {time_tracking_sheet.name}\'s time tracking sheet | '
+            logger.info(f'Error updating {time_tracking_sheet.name}\'s time tracking sheet | '
                   f'Result Code: {update_column_response.result_code}')
-    print("------------Done updating Sheets------------")
+    logger.info("Done updating Sheets. Exiting distribution function")
 
 def get_customer_list(sheetid):
     smartsheet_client = smartsheet.Smartsheet(access_token=SMARTSHEET_API_TOKEN)
     custlist=[]
+    logger.info("Grabing temp csv to extract list from column 1 of source sheet")
     with tempfile.TemporaryDirectory() as csvdir:
         smartsheet_client.Sheets.get_sheet_as_csv(sheetid, csvdir)
         with open(os.path.join(csvdir, 'download.csv'), 'r') as file:
@@ -100,35 +102,50 @@ def get_customer_list(sheetid):
                 cols = row[0].split(',')
                 custlist.append(cols[0])
     custlist.pop(0)
+    logger.info("list complete. returning items to caller function")
     return custlist
 
 def funcCaller(sheetid, col_num, col_title, folders):
+    logger.debug(f"creating list of items from sheet: {sheetid}")
     custs = get_customer_list(sheetid)
+    logger.debug(f"distributing list")
     picklist_distribution(custs, col_num, col_title, folders)
+    logger.info("Distribution complete, exiting stack")
+
 
 
 #Customer Picklist
 @app.post('/picklistupdater', status_code=200)
 async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
-    print(body)
+    logger.info("Payload recieved from Smartsheets for Customer List update")
     if "challenge" in body.keys():
+        logger.info("Challenge Ack")
         return {"smartsheetHookResponse" : body['challenge']}
     else:
         Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256, SMARTSHEET_WEBHOOK_SHAREDSECRET))
+        logger.info("Authorized")
         folders = SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list
+        logger.debug(f"Folder IDs: {folders}")
+        logger.debug(f"Starting background task with Customers from {MASTER_CUST_LIST_SHEET_ID} for column 3: Customer Name")
         tasks.add_task(funcCaller(MASTER_CUST_LIST_SHEET_ID, 2, 'Customer Name', folders))
+        logger.info("Responding to webhook")
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
 #contract picklist
 @app.post('/contractpicklistupdater', status_code=200)
 async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hmac_SHA256: str | None = Header(default=None)):
-    print(body)
+    logger.info("Payload recieved from Smartsheets for Opportunity List update")
     if "challenge" in body.keys():
+        logger.info("Challenge Ack")
         return {"smartsheetHookResponse" : body['challenge']}
     else:
         Depends(authorize(json.dumps(body, separators=(',', ':')), Smartsheet_Hmac_SHA256, SMARTSHEET_CONTRACT_WEBHOOK_SHAREDSECRET))
+        logger.info("Authorized")
         folders = CONTRACT_TRACKING_FOLDER_IDs_list
+        logger.info(f"Folder IDs: {folders}")
+        logger.debug(f"Starting background task with Customers from {MASTER_CONTRACT_LIST_SHEET_ID} for column 3: Customer Name")
         tasks.add_task(funcCaller(MASTER_CONTRACT_LIST_SHEET_ID, 3, 'Opportunity Number', folders))
+        logger.info("Responding to webhook")
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
 
