@@ -127,7 +127,7 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
         folders = SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list
         logger.debug(f"Folder IDs: {folders}")
         logger.debug(f"Starting background task with Customers from {MASTER_CUST_LIST_SHEET_ID} for column 3: Customer Name")
-        tasks.add_task(funcCaller(MASTER_CUST_LIST_SHEET_ID, 2, 'Customer Name', folders))
+        tasks.add_task(funcCaller, MASTER_CUST_LIST_SHEET_ID, 2, 'Customer Name', folders)
         logger.info("Responding to webhook")
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
@@ -144,7 +144,7 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
         folders = CONTRACT_TRACKING_FOLDER_IDs_list
         logger.info(f"Folder IDs: {folders}")
         logger.debug(f"Starting background task with Customers from {MASTER_CONTRACT_LIST_SHEET_ID} for column 3: Customer Name")
-        tasks.add_task(funcCaller(MASTER_CONTRACT_LIST_SHEET_ID, 3, 'Opportunity Number', folders))
+        tasks.add_task(funcCaller, MASTER_CONTRACT_LIST_SHEET_ID, 3, 'Opportunity Number', folders)
         logger.info("Responding to webhook")
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
