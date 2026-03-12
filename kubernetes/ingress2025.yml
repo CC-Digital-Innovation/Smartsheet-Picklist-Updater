@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: picklistupdater
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd,default-picklistupdater-stripprefix@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: k3s.ccxs.support
+    http:
+      paths:
+      - path: /picklistupdater
+        pathType: Prefix
+        backend:
+          service:
+            name: picklistupdater
+            port:
+              number: 8000
