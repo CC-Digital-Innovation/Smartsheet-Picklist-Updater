@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: picklistupdater
+  name: picklistupdater-v2
   annotations:    
     cert-manager.io/cluster-issuer: letsencrypt
     cert-manager.io/revision-history-limit: "3"
