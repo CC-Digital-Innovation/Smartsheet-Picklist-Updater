@@ -43,7 +43,7 @@ def authorize(body, checkvalue, webhooksecret):
             detail='Invalid token')
 
 
-def picklist_distribution(customer_options: list, col_num: int, col_title, folders):
+def picklist_distribution(customer_options: list, col_title, folders):
     # Initialize the connection to the Smartsheet client.
     smartsheet_client = smartsheet.Smartsheet(access_token=SMARTSHEET_API_TOKEN)
     sheetslist = []
@@ -60,8 +60,7 @@ def picklist_distribution(customer_options: list, col_num: int, col_title, folde
         {
             'title': col_title,
             'type': 'PICKLIST',
-            'options': customer_options,
-            'index': col_num
+            'options': customer_options
         }
     )
 
@@ -73,7 +72,7 @@ def picklist_distribution(customer_options: list, col_num: int, col_title, folde
         )
 
         # Get the ID of the customer name column.
-        customer_name_column_id = list_columns_response.data[col_num].id_
+        customer_name_column_id = list_columns_response.data[col_title].id_
     
         # Update the customer name column in the sheet.
         update_column_response = smartsheet_client.Sheets.update_column(
@@ -105,11 +104,11 @@ def get_customer_list(sheetid):
     logger.info("list complete. returning items to caller function")
     return custlist
 
-def funcCaller(sheetid, col_num, col_title, folders):
+def funcCaller(sheetid, col_title, folders):
     logger.debug(f"creating list of items from sheet: {sheetid}")
     custs = get_customer_list(sheetid)
     logger.debug(f"distributing list")
-    picklist_distribution(custs, col_num, col_title, folders)
+    picklist_distribution(custs, col_title, folders)
     logger.info("Distribution complete, exiting stack")
 
 
@@ -127,7 +126,7 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
         folders = SMARTSHEET_TIME_TRACKING_FOLDER_IDs_list
         logger.debug(f"Folder IDs: {folders}")
         logger.debug(f"Starting background task with Customers from {MASTER_CUST_LIST_SHEET_ID} for column 3: Customer Name")
-        tasks.add_task(funcCaller, MASTER_CUST_LIST_SHEET_ID, 2, 'Customer Name', folders)
+        tasks.add_task(funcCaller, MASTER_CUST_LIST_SHEET_ID, 'Customer Name', folders)
         logger.info("Responding to webhook")
         return {"Callback Message" : "Callback recieved, proccessing update"}
     
@@ -144,10 +143,6 @@ async def sample_post(tasks: BackgroundTasks, body: dict = Body(), Smartsheet_Hm
         folders = CONTRACT_TRACKING_FOLDER_IDs_list
         logger.info(f"Folder IDs: {folders}")
         logger.debug(f"Starting background task with Customers from {MASTER_CONTRACT_LIST_SHEET_ID} for column 3: Customer Name")
-        tasks.add_task(funcCaller, MASTER_CONTRACT_LIST_SHEET_ID, 3, 'Opportunity Number', folders)
+        tasks.add_task(funcCaller, MASTER_CONTRACT_LIST_SHEET_ID, 'Opportunity Number', folders)
         logger.info("Responding to webhook")
         return {"Callback Message" : "Callback recieved, proccessing update"}
-    
-
-
-
