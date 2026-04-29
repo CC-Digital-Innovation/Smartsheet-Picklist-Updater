@@ -70,7 +70,7 @@ def picklist_distribution(customer_options: list, col_title, folders):
         list_columns_response = smartsheet_client.Sheets.get_columns(
             time_tracking_sheet.id_
         )
-        
+
         # Get the ID of the customer name column.
         customer_name_column_id = None
         for column in list_columns_response.data:
@@ -96,7 +96,7 @@ def picklist_distribution(customer_options: list, col_title, folders):
                   f'Result Code: {update_column_response.result_code}')
     logger.info("Done updating Sheets. Exiting distribution function")
 
-def get_customer_list(sheetid):
+def get_customer_list(sheetid, col_title):
     smartsheet_client = smartsheet.Smartsheet(access_token=SMARTSHEET_API_TOKEN)
     custlist=[]
     logger.info("Grabing temp csv to extract list from column 1 of source sheet")
@@ -106,14 +106,25 @@ def get_customer_list(sheetid):
             csvread = csv.reader(file, delimiter='\n')
             for row in csvread:
                 cols = row[0].split(',')
-                custlist.append(cols[0])
+                
+                # todo: figure out index from col_title
+                col_index = -1
+                for index,col_name in enumerate(cols):
+                    if col_name == col_title:
+                        col_index = index
+                        break
+                
+                if col_index == -1:
+                    raise ValueError(f"Column '{col_title}' not found")
+                
+                custlist.append(cols[col_index])
     custlist.pop(0)
     logger.info("list complete. returning items to caller function")
     return custlist
 
 def funcCaller(sheetid, col_title, folders):
     logger.debug(f"creating list of items from sheet: {sheetid}")
-    custs = get_customer_list(sheetid)
+    custs = get_customer_list(sheetid, col_title)
     logger.debug(f"distributing list")
     picklist_distribution(custs, col_title, folders)
     logger.info("Distribution complete, exiting stack")
