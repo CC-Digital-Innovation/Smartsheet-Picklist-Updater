@@ -70,10 +70,17 @@ def picklist_distribution(customer_options: list, col_title, folders):
         list_columns_response = smartsheet_client.Sheets.get_columns(
             time_tracking_sheet.id_
         )
-
+        
         # Get the ID of the customer name column.
-        customer_name_column_id = list_columns_response.data[col_title].id_
-    
+        customer_name_column_id = None
+        for column in list_columns_response.data:
+            if column.title == col_title:
+                customer_name_column_id = column.id
+                break
+        
+        if customer_name_column_id is None:
+            raise ValueError(f"Column '{col_title}' not found")
+        
         # Update the customer name column in the sheet.
         update_column_response = smartsheet_client.Sheets.update_column(
             time_tracking_sheet.id_,
