@@ -70,7 +70,7 @@ def picklist_distribution(customer_options: list, col_title, folders):
         list_columns_response = smartsheet_client.Sheets.get_columns(
             time_tracking_sheet.id_
         )
-
+        
         # Get the ID of the customer name column.
         customer_name_column_id = None
         for column in list_columns_response.data:
@@ -103,22 +103,28 @@ def get_customer_list(sheetid, col_title):
     with tempfile.TemporaryDirectory() as csvdir:
         smartsheet_client.Sheets.get_sheet_as_csv(sheetid, csvdir)
         with open(os.path.join(csvdir, 'download.csv'), 'r') as file:
-            csvread = csv.reader(file, delimiter='\n')
+            csvread = csv.reader(file)
+            
+            # Just read the first row to get the index of the column title.
+            col_index = -1
             for row in csvread:
-                cols = row[0].split(',')
-                
-                # todo: figure out index from col_title
-                col_index = -1
-                for index,col_name in enumerate(cols):
+                # Figure out the index for the column title.
+                for index,col_name in enumerate(row):
                     if col_name == col_title:
                         col_index = index
                         break
-                
-                if col_index == -1:
-                    raise ValueError(f"Column '{col_title}' not found")
-                
-                custlist.append(cols[col_index])
-    custlist.pop(0)
+                    
+                # Just check the first row.
+                break
+            
+            # We couldn't find the column title.
+            if col_index == -1:
+                raise ValueError(f"Column '{col_title}' not found")
+            
+            # Add all customer names to the customer list.
+            for row in csvread:
+                custlist.append(row[col_index])
+    
     logger.info("list complete. returning items to caller function")
     return custlist
 
