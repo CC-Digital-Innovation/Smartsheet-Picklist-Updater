@@ -2,6 +2,6 @@ repo: https://github.com/CC-Digital-Innovation/Smartsheet-Picklist-Updater
 ssh_url: git@github.com:CC-Digital-Innovation/Smartsheet-Picklist-Updater.git
 branch: main
 project_root: src
-image: picklistupdater
+image: smartsheet-picklist-updater
 manifest_path: kubernetes/deployment.yml
-pipeline: picklistupdater
+pipeline: smartsheet-picklist-updater
