@@ -1,7 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: picklistupdater-v2
+  name: smartsheet-picklist-updater
+  namespace: internal-tooling
   annotations:    
     cert-manager.io/cluster-issuer: letsencrypt
     cert-manager.io/revision-history-limit: "3"
@@ -17,14 +18,14 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: picklistupdater
+            name: smartsheet-picklist-updater
             port:
               number: 8000
       - path: "/*"
         pathType: Prefix
         backend:
           service:
-            name: picklistupdater
+            name: smartsheet-picklist-updater
             port:
               number: 8000
   tls:
