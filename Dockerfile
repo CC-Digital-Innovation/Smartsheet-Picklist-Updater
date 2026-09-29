@@ -39,16 +39,16 @@ RUN rm -rf /usr/local/lib/python3.14/site-packages/pip
 ENV PYTHONPATH="/usr/local/lib/python3.14/site-packages"
 
 # Create non-root user and group.
-RUN addgroup -S -g 10015 smartsheet_picklist_updater && \
-    adduser -S -u 10014 -G smartsheet_picklist_updater smartsheet_picklist_updater
+RUN addgroup -S -g 10015 appgroup && \
+    adduser -S -u 10014 -G appgroup appuser
 
 # Copy source code and make the local user own the /app directory and all the files within it.
 # This allows the user to write files to the system.
-RUN chown -R smartsheet_picklist_updater:smartsheet_picklist_updater /app
-COPY --chown=smartsheet_picklist_updater:smartsheet_picklist_updater ./src .
+RUN chown -R appuser:appgroup /app
+COPY --chown=appuser:appgroup ./src .
 
-# Set non-root user and group to run the app.
-USER smartsheet_picklist_updater:smartsheet_picklist_updater
+# Set non-root user and group to run the app via their UID and GID.
+USER 10014:10015
 
 # Open ports for the app.
 EXPOSE 8000
